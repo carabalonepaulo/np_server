@@ -5,6 +5,7 @@ type
     port*: int
     maxClients*: int
     lock*: bool
+    firstScript*: string
 
 proc loadConf*(): Conf =
   let text = readFile("./settings.json")

@@ -90,7 +90,7 @@ proc newServer*(): Server =
 
   result.state = lua.newstate()
   result.state.openlibs()
-  discard result.state.dofile("./scripts/init.lua")
+  discard result.state.dofile(result.conf.firstScript.cstring)
 
   result.createWeakRefs()
 
