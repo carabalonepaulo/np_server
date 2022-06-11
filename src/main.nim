@@ -44,7 +44,7 @@ server.state.register("disconnect", proc(state: PState): cint {.cdecl.} =
 
   if server.clients[id] == nil:
     server.clients[id].socket.close()
-    server.state.callOnDisconnected(id)
+    server.state.callOnDisconnected(server.onDisconnected, id)
     server.clients[id] = nil
   
   result = 0)

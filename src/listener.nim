@@ -19,7 +19,14 @@ type
     state*: PState
     running*: bool
     uid*: UID
-  
+
+    onInit*: cint
+    onFinalize*: cint
+    onUpdate*: cint
+    onConnected*: cint
+    onDisconnected*: cint
+    onData*: cint
+
   LuaFunction* = proc(state: PState): cint {.cdecl.}
 
 proc newClient*(id: int, socket: AsyncSocket): Client =
@@ -35,10 +42,10 @@ proc beginReceive(server: Server, id: int, client: Client) {.async.} =
 
   if line.len() == 0:
     server.uid.freeId(id)
-    server.state.callOnDisconnected(id)
+    server.state.callOnDisconnected(server.onDisconnected, id)
     return
 
-  server.state.callOnData(id, line)
+  server.state.callOnData(server.onData, id, line)
   asyncCheck server.beginReceive(id, client)
 
 proc beginAccept*(server: Server) {.async.} =
@@ -47,10 +54,29 @@ proc beginAccept*(server: Server) {.async.} =
   let client = newClient(id, socket)
 
   server.clients[id] = client
-  server.state.callOnConnected(id)
+  server.state.callOnConnected(server.onConnected, id)
 
   asyncCheck server.beginReceive(id, client)
   asyncCheck server.beginAccept()
+
+proc createWeakRefs(server: Server) =
+  server.state.getglobal("on_init")
+  server.onInit = reference(server.state, REGISTRYINDEX)
+
+  server.state.getglobal("on_finalize")
+  server.onFinalize = reference(server.state, REGISTRYINDEX)
+
+  server.state.getglobal("on_update")
+  server.onUpdate = reference(server.state, REGISTRYINDEX)
+
+  server.state.getglobal("on_connected")
+  server.onConnected = reference(server.state, REGISTRYINDEX)
+
+  server.state.getglobal("on_disconnected")
+  server.onDisconnected = reference(server.state, REGISTRYINDEX)
+
+  server.state.getglobal("on_data")
+  server.onData = reference(server.state, REGISTRYINDEX)
 
 proc newServer*(): Server =
   result = Server.new()
@@ -66,10 +92,12 @@ proc newServer*(): Server =
   result.state.openlibs()
   discard result.state.dofile("./scripts/init.lua")
 
+  result.createWeakRefs()
+
 proc start*(server: Server) =
   server.socket.listen()
   server.running = true
-  server.state.callInit()
+  server.state.callInit(server.onInit)
   asyncCheck server.beginAccept()
 
 proc run*(server: Server) =
@@ -77,5 +105,5 @@ proc run*(server: Server) =
   while server.running:
     poll(0)
     if server.conf.lock: sleep(1)
-    server.state.callUpdate()
-  server.state.callOnFinalize()
+    server.state.callUpdate(server.onUpdate)
+  server.state.callOnFinalize(server.onFinalize)
