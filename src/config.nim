@@ -3,7 +3,7 @@ import json
 type
   Conf* = ref object
     port*: int
-    max_clients*: int
+    maxClients*: int
     lock*: bool
 
 proc loadConf*(): Conf =

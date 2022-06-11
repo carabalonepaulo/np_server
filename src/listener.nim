@@ -81,7 +81,7 @@ proc createWeakRefs(server: Server) =
 proc newServer*(): Server =
   result = Server.new()
   result.conf = loadConf()
-  result.clients = newSeq[Client](result.conf.max_clients)
+  result.clients = newSeq[Client](result.conf.maxClients)
   result.uid = newUID()
 
   result.socket = newAsyncSocket()
