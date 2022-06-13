@@ -6,6 +6,7 @@ import ./types
 import ./config
 import ./script
 import ./uid
+import ./libs/serverlib
 
 proc newClient*(id: int, socket: AsyncSocket): Client =
   result = Client.new()
@@ -37,24 +38,34 @@ proc beginAccept*(server: Server) {.async.} =
   asyncCheck server.beginReceive(id, client)
   asyncCheck server.beginAccept()
 
-proc createWeakRefs(server: Server) =
-  server.state.getglobal("on_init")
+proc createWeakRefs*(server: Server) =
+  server.state.getglobal("server")
+
+  server.state.getfield(-1, "on_init")
   server.onInit = reference(server.state, REGISTRYINDEX)
 
-  server.state.getglobal("on_finalize")
+  server.state.getfield(-1, "on_finalize")
   server.onFinalize = reference(server.state, REGISTRYINDEX)
 
-  server.state.getglobal("on_update")
+  server.state.getfield(-1, "on_update")
   server.onUpdate = reference(server.state, REGISTRYINDEX)
 
-  server.state.getglobal("on_connected")
+  server.state.getfield(-1, "on_connected")
   server.onConnected = reference(server.state, REGISTRYINDEX)
 
-  server.state.getglobal("on_disconnected")
+  server.state.getfield(-1, "on_disconnected")
   server.onDisconnected = reference(server.state, REGISTRYINDEX)
 
-  server.state.getglobal("on_data")
+  server.state.getfield(-1, "on_data")
   server.onData = reference(server.state, REGISTRYINDEX)
+
+proc initScripts*(server: Server) =
+  server.state = lua.newstate()
+  server.state.openlibs()
+  registerServerLib()
+
+  discard server.state.dofile(server.conf.firstScript.cstring)
+  server.createWeakRefs()
 
 proc newServer*(): Server =
   result = Server.new()
@@ -65,12 +76,6 @@ proc newServer*(): Server =
   result.socket = newAsyncSocket()
   result.socket.setSockOpt(OptReuseAddr, true)
   result.socket.bindAddr(Port(result.conf.port))
-
-  result.state = lua.newstate()
-  result.state.openlibs()
-  discard result.state.dofile(result.conf.firstScript.cstring)
-
-  result.createWeakRefs()
 
 proc start*(server: Server) =
   server.socket.listen()

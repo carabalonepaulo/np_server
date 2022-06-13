@@ -1,11 +1,9 @@
 import ./types
 import ./globals
 import ./listener
-import ./libs/serverlib
 
 server = newServer()
-
-registerServerLib()
+server.initScripts()
 
 setControlCHook(proc() {.noconv.} =
   server.running = false)

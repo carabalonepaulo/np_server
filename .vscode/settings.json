@@ -1,15 +1,5 @@
 {
   "Lua.diagnostics.globals": [
-    "on_connected",
-    "on_data",
-    "on_disconnected",
-    "on_finalize",
-    "on_update",
-    "on_init",
-    "finalize",
-    "send_to",
-    "send_to_all",
-    "get_ip",
-    "disconnect"
+    "server"
   ]
 }
