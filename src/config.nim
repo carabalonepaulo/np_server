@@ -1,11 +1,6 @@
 import json
 
-type
-  Conf* = ref object
-    port*: int
-    maxClients*: int
-    lock*: bool
-    firstScript*: string
+import ./types
 
 proc loadConf*(): Conf =
   let text = readFile("./settings.json")

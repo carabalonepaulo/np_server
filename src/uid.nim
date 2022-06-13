@@ -1,7 +1,4 @@
-type
-  UID* = ref object
-    highest_index: int
-    available_indices: seq[int]
+import ./types
 
 proc getNextId*(uid: UID): int =
   if uid.available_indices.len() > 0:

@@ -1,6 +1,7 @@
 import std/asyncnet
 import lua
 
+import ./types
 import ./script
 import ./listener
 

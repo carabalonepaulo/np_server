@@ -2,32 +2,10 @@ import std/[asyncnet, asyncdispatch]
 import os
 import lua
 
+import ./types
 import ./config
 import ./script
 import ./uid
-
-type
-  Client* = ref object
-    id*: int
-    socket*: AsyncSocket
-    ip*: string
-
-  Server* = ref object
-    conf*: Conf
-    socket*: AsyncSocket
-    clients*: seq[Client]
-    state*: PState
-    running*: bool
-    uid*: UID
-
-    onInit*: cint
-    onFinalize*: cint
-    onUpdate*: cint
-    onConnected*: cint
-    onDisconnected*: cint
-    onData*: cint
-
-  LuaFunction* = proc(state: PState): cint {.cdecl.}
 
 proc newClient*(id: int, socket: AsyncSocket): Client =
   result = Client.new()
